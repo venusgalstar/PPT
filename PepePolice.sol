@@ -13,23 +13,16 @@ contract PepePolice is ERC20, ERC20Burnable, Ownable {
   mapping(address => uint256) private _balances;
   mapping(address => bool) controllers;
 
-  uint256 private _totalSupply;
-  uint256 private MAXSUP;
   uint256 constant MAXIMUMSUPPLY=100_000_000_000*10**18;
 
   constructor() ERC20("PepePolice", "PPT") { 
       uint256 amount = 90_000_000_000 * 10 ** 18;
       _mint(msg.sender, amount); //10% for staking reward
-      _totalSupply = _totalSupply.add(amount);
-      MAXSUP=MAXSUP.add(amount);
   }
 
   function mint(address to, uint256 amount) external {
     require(controllers[msg.sender], "Only controllers can mint");
-    require((MAXSUP+amount)<=MAXIMUMSUPPLY,"Maximum supply has been reached");
-    _totalSupply = _totalSupply.add(amount);
-    MAXSUP=MAXSUP.add(amount);
-    _balances[to] = _balances[to].add(amount);
+    require((totalSupply() + amount)<=MAXIMUMSUPPLY,"Maximum supply has been reached");
     _mint(to, amount);
   }
 
@@ -49,15 +42,6 @@ contract PepePolice is ERC20, ERC20Burnable, Ownable {
   function removeController(address controller) external onlyOwner {
     controllers[controller] = false;
   }
-  
-  function totalSupply() public override view returns (uint256) {
-    return _totalSupply;
-  }
-
-  function maxSupply() public  pure returns (uint256) {
-    return MAXIMUMSUPPLY;
-  }
-
 }
 
 
