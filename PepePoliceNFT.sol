@@ -26,7 +26,7 @@ contract PepePoliceNFT is ERC721Enumerable, Ownable {
     //==For DevMint==
     address[] private devWallets;
     mapping(uint256 => uint256) private availableTokenIds;
-    mapping(uint256 => uint256) private devIdRecPosition;
+
     modifier onlyDev() {
         bool exist = false;
         for (uint256 i; i < devWallets.length; ++i) {
@@ -48,24 +48,19 @@ contract PepePoliceNFT is ERC721Enumerable, Ownable {
     ) external payable onlyDev {
         uint256 supply = totalSupply();
         require(!paused, "paused-eror");
-        require(__tokenIds.length <= maxMintAmount, "tokenid-length");
-        require(__tokenIds.length > 0, "less<0");
+        require(
+            __tokenIds.length <= maxMintAmount,
+            "tokenIds amount exceed maxmium count"
+        );
+        require(__tokenIds.length > 0, "invalid tokenIDs length");
         require(supply + __tokenIds.length <= maxSupply, "maxsuplly error");
 
         for (uint256 i; i < __tokenIds.length; ++i) {
             uint256 limit = maxSupply - totalSupply();
             uint256 mintPos = __tokenIds[i];
             uint256 end = availableTokenIdAt(limit);
-
-            if(mintPos>limit){
-                availableTokenIds[devIdRecPosition[mintPos]]=end;
-            }
-            else{
-                availableTokenIds[mintPos] = end;
-                devIdRecPosition[end]=mintPos;
-            }
-
-            _safeMint(msg.sender,mintPos);
+            availableTokenIds[mintPos] = end;
+            _safeMint(msg.sender, mintPos);
         }
     }
 
@@ -88,9 +83,7 @@ contract PepePoliceNFT is ERC721Enumerable, Ownable {
 
     function getRandomNumber() public view returns (uint256) {
         uint256 randomNumber = uint256(
-            keccak256(
-                abi.encodePacked(block.timestamp, block.difficulty)
-            )
+            keccak256(abi.encodePacked(block.timestamp, block.difficulty))
         );
         return randomNumber;
     }
@@ -114,10 +107,10 @@ contract PepePoliceNFT is ERC721Enumerable, Ownable {
         uint256 supply = totalSupply();
         uint256 newItemId;
 
-        require(!paused);
-        require(_mintAmount > 0);
-        require(_mintAmount <= maxMintAmount);
-        require(supply + _mintAmount <= maxSupply);
+        require(!paused, "paused-eror");
+        require(_mintAmount > 0, "invalid mintAmount");
+        require(_mintAmount <= maxMintAmount, "exceed mintAmount");
+        require(supply + _mintAmount <= maxSupply, "exceed totalSupply");
 
         if (msg.sender != owner()) {
             require(
@@ -127,7 +120,7 @@ contract PepePoliceNFT is ERC721Enumerable, Ownable {
         }
 
         for (uint256 i = 1; i <= _mintAmount; i++) {
-            uint256 newItemId=randomTokenId();
+            uint256 newItemId = randomTokenId();
             _safeMint(_to, newItemId);
         }
     }
@@ -152,7 +145,7 @@ contract PepePoliceNFT is ERC721Enumerable, Ownable {
 
         for (uint256 i = 1; i <= _mintAmount; i++) {
             require(paytoken.transferFrom(msg.sender, address(this), costval));
-            uint256 newItemId=randomTokenId();
+            uint256 newItemId = randomTokenId();
             _safeMint(_to, newItemId);
         }
     }
@@ -208,13 +201,20 @@ contract PepePoliceNFT is ERC721Enumerable, Ownable {
     function pause(bool _state) public onlyOwner {
         paused = _state;
     }
-    
 
     function getNFTCost(uint256 _pid) public view virtual returns (uint256) {
         TokenInfo storage tokens = AllowedCrypto[_pid];
         uint256 costval;
         costval = tokens.costvalue;
         return costval;
+    }
+
+    function setNFTCost(uint256 _pid, uint256 costVal) external onlyDev {
+
+        if( pid == 100 )
+            cost = costVal;
+            
+        AllowedCrypto[_pid].costvalue = costVal;
     }
 
     function getCryptotoken(uint256 _pid) public view virtual returns (IERC20) {
