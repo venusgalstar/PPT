@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract NFTStaking is Ownable, IERC721Receiver {
-
     uint256 public totalStaked;
     mapping(address => uint256[]) private _stakedTokens;
     uint256 public tokenPrice;
@@ -38,7 +37,7 @@ contract NFTStaking is Ownable, IERC721Receiver {
         emit Received(msg.sender, msg.value);
     }
 
-    fallback() external payable { 
+    fallback() external payable {
         emit Fallback(msg.sender, msg.value);
     }
 
@@ -82,15 +81,13 @@ contract NFTStaking is Ownable, IERC721Receiver {
 
             delete vault[tokenId];
             emit NFTUnstaked(account, tokenId, block.timestamp);
-            nft.transferFrom(address(this), account, tokenId);
+            nft.transfer(account, tokenId);
             lastIndex = _stakedTokens[account].length;
             for (idx = 0; idx < lastIndex; idx++) {
                 if (_stakedTokens[account][idx] == tokenId) break;
             }
             if (idx < lastIndex - 1) {
-                _stakedTokens[account][idx] = _stakedTokens[account][
-                    lastIndex - 1
-                ];
+                _stakedTokens[account][idx] = _stakedTokens[account][lastIndex - 1];
             }
             delete _stakedTokens[account][lastIndex - 1];
             _stakedTokens[account].pop();
@@ -180,13 +177,7 @@ contract NFTStaking is Ownable, IERC721Receiver {
     }
 
     function balanceOf(address account) public view returns (uint256) {
-        uint256 balance = 0;
-        uint256 supply = nft.totalSupply();
-        for (uint i = 1; i <= supply; i++) {
-            if (vault[i].owner == account) {
-                balance += 1;
-            }
-        }
+        uint256 balance = _stakedTokens[account].length;
         return balance;
     }
 
