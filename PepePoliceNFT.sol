@@ -30,6 +30,7 @@ contract PepePoliceNFT is ERC721Enumerable, Ownable {
     //==For DevMint==
     address[] private devWallets;
     mapping(uint256 => uint256) private availableTokenIds;
+    mapping(uint256 => uint256) private devIdRecPosition;
 
     modifier onlyDev() {
         bool exist = false;
@@ -129,7 +130,7 @@ contract PepePoliceNFT is ERC721Enumerable, Ownable {
         }
 
         for (uint256 i = 1; i <= _mintAmount; i++) {
-            uint256 newItemId = randomTokenId();
+            newItemId = randomTokenId();
             _safeMint(_to, newItemId);
         }
     }
@@ -154,7 +155,7 @@ contract PepePoliceNFT is ERC721Enumerable, Ownable {
 
         for (uint256 i = 1; i <= _mintAmount; i++) {
             require(paytoken.transferFrom(msg.sender, address(this), costval));
-            uint256 newItemId = randomTokenId();
+            newItemId = randomTokenId();
             _safeMint(_to, newItemId);
         }
     }
@@ -220,7 +221,7 @@ contract PepePoliceNFT is ERC721Enumerable, Ownable {
 
     function setNFTCost(uint256 _pid, uint256 costVal) external onlyDev {
 
-        if( pid == 100 )
+        if( _pid == 100 )
             cost = costVal;
 
         AllowedCrypto[_pid].costvalue = costVal;
