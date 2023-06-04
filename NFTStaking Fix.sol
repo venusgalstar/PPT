@@ -81,7 +81,7 @@ contract NFTStaking is Ownable, IERC721Receiver {
 
             delete vault[tokenId];
             emit NFTUnstaked(account, tokenId, block.timestamp);
-            nft.transfer(account, tokenId);
+            nft.transferFrom(address(this), account, tokenId);
             lastIndex = _stakedTokens[account].length;
             for (idx = 0; idx < lastIndex; idx++) {
                 if (_stakedTokens[account][idx] == tokenId) break;
