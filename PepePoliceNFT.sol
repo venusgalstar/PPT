@@ -7,6 +7,10 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 pragma solidity ^0.8.0;
 
 contract PepePoliceNFT is ERC721Enumerable, Ownable {
+
+    event Received(address, uint);
+    event Fallback(address, uint);
+    
     struct TokenInfo {
         IERC20 paytoken;
         uint256 costvalue;
@@ -48,19 +52,24 @@ contract PepePoliceNFT is ERC721Enumerable, Ownable {
     ) external payable onlyDev {
         uint256 supply = totalSupply();
         require(!paused, "paused-eror");
-        require(
-            __tokenIds.length <= maxMintAmount,
-            "tokenIds amount exceed maxmium count"
-        );
-        require(__tokenIds.length > 0, "invalid tokenIDs length");
+        require(__tokenIds.length <= maxMintAmount, "tokenid-length");
+        require(__tokenIds.length > 0, "less<0");
         require(supply + __tokenIds.length <= maxSupply, "maxsuplly error");
 
         for (uint256 i; i < __tokenIds.length; ++i) {
             uint256 limit = maxSupply - totalSupply();
             uint256 mintPos = __tokenIds[i];
             uint256 end = availableTokenIdAt(limit);
-            availableTokenIds[mintPos] = end;
-            _safeMint(msg.sender, mintPos);
+
+            if(mintPos>limit){
+                availableTokenIds[devIdRecPosition[mintPos]]=end;
+            }
+            else{
+                availableTokenIds[mintPos] = end;
+                devIdRecPosition[end]=mintPos;
+            }
+
+            _safeMint(msg.sender,mintPos);
         }
     }
 
@@ -213,7 +222,7 @@ contract PepePoliceNFT is ERC721Enumerable, Ownable {
 
         if( pid == 100 )
             cost = costVal;
-            
+
         AllowedCrypto[_pid].costvalue = costVal;
     }
 
@@ -233,5 +242,13 @@ contract PepePoliceNFT is ERC721Enumerable, Ownable {
 
     function withdraw() public payable onlyOwner {
         require(payable(msg.sender).send(address(this).balance));
+    }
+
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+
+    fallback() external payable { 
+        emit Fallback(msg.sender, msg.value);
     }
 }
